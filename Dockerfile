@@ -40,8 +40,12 @@ COPY . .
 # Create directory for WhatsApp session
 RUN mkdir -p /app/.wwebjs_auth
 
+# Copy start script and make it executable
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 # Expose port
 EXPOSE 3000
 
-# Start the server (production mode)
-CMD ["npm", "start"]
+# Start the server (runs migrations then starts)
+CMD ["/app/start.sh"]
