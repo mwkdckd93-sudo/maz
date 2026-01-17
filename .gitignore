@@ -1,0 +1,45 @@
+# ============================================
+# MAZAD BACKEND - Git Ignore
+# ============================================
+
+# Environment files (NEVER commit these!)
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Uploads (user data)
+uploads/
+!uploads/.gitkeep
+
+# WhatsApp session data
+.wwebjs_auth/
+.wwebjs_cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist/
+build/
+
+# Test coverage
+coverage/
+
+# Docker volumes (if local)
+mysql_data/

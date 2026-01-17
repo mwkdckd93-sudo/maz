@@ -1,0 +1,88 @@
+version: '3.8'
+
+# ============================================
+# SECURITY WARNING:
+# Do NOT use default passwords in production!
+# Create a .env file with secure passwords:
+#   MYSQL_ROOT_PASSWORD=your_secure_root_password
+#   MYSQL_PASSWORD=your_secure_db_password
+#   JWT_SECRET=your_64_char_random_string
+# ============================================
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: mazad_mysql
+    restart: always
+    environment:
+      # SECURITY: These MUST be set in .env for production
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD must be set}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-mazad_db}
+      MYSQL_USER: ${MYSQL_USER:-mazad_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD must be set}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - mazad_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Node.js API Server
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mazad_api
+    restart: always
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-mazad_db}
+      DB_USER: ${MYSQL_USER:-mazad_user}
+      # SECURITY: These MUST be set in .env for production
+      DB_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD must be set}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      JWT_EXPIRES_IN: 7d
+    ports:
+      - "3000:3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./uploads:/app/uploads
+      - whatsapp_session:/app/.wwebjs_auth
+    networks:
+      - mazad_network
+
+  # phpMyAdmin (Optional - for database management)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: mazad_phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: ${MYSQL_USER:-mazad_user}
+      PMA_PASSWORD: ${MYSQL_PASSWORD:-mazad_pass_2026}
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - mazad_network
+
+volumes:
+  mysql_data:
+  whatsapp_session:
+
+networks:
+  mazad_network:
+    driver: bridge
